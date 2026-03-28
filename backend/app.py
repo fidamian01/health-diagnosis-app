@@ -20,7 +20,11 @@ from predictor import HealthPredictor
 
 # ── APP SETUP ────────────────────────────────────────────────────────────────
 app = Flask(__name__)
-CORS(app, resources={r"/api/*": {"origins": "*"}})   # no credentials=True needed
+CORS(app, resources={r"/api/*": {"origins": [
+    "http://localhost:8000",
+    "http://127.0.0.1:5500",
+    "https://fidamian01.github.io"
+]}})   # no credentials=True needed
 app.config["SECRET_KEY"] = "healthai-token-secret-2024"
 
 DATABASE_DIR  = os.path.join(PROJECT_DIR, 'database')
