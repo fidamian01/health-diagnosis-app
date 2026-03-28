@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DualCare Health - AI-Powered Malaria & Diabetes Prediction</title>
+    <link rel="stylesheet" href="stylesp.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:wght@400;500&display=swap">
+    <style>
+    /* ── Auth ── */
+    .auth-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #0d1117;
+        padding: 24px;
+    }
+    .auth-box {
+        background: #161b22;
+        border: 1px solid #30363d;
+        border-radius: 16px;
+        padding: 40px;
+        width: 100%;
+        max-width: 420px;
+    }
+    .auth-header { text-align: center; margin-bottom: 28px; }
+    .auth-header i { display: block; font-size: 2rem; color: #4f8ef7; margin-bottom: 12px; }
+    .auth-header h1 { font-size: 1.35rem; font-weight: 600; color: #e6edf3; margin-bottom: 6px; letter-spacing: -0.02em; }
+    .auth-header p  { font-size: 0.85rem; color: #8b949e; }
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: 0.85rem; font-weight: 500; color: #c9d1d9; margin-bottom: 6px; }
+    .form-group input, .form-group select {
+        width: 100%;
+        padding: 10px 13px;
+        background: #0d1117;
+        border: 1px solid #30363d;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        color: #e6edf3;
+        font-family: 'DM Sans', system-ui, sans-serif;
+        transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .form-group input:focus, .form-group select:focus {
+        outline: none;
+        border-color: #4f8ef7;
+        box-shadow: 0 0 0 3px rgba(79,142,247,0.15);
+    }
+    .form-group input::placeholder { color: #6e7681; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .auth-toggle { text-align: center; margin-top: 20px; font-size: 0.85rem; color: #8b949e; }
+    .auth-toggle a { color: #4f8ef7; text-decoration: none; font-weight: 500; }
+    .auth-toggle a:hover { text-decoration: underline; }
+    .error-message   { background: rgba(248,81,73,0.1); color: #f85149; border: 1px solid rgba(248,81,73,0.25); padding: 10px 14px; border-radius: 6px; margin-bottom: 16px; font-size: 0.85rem; display: none; }
+    .success-message { background: rgba(63,185,80,0.1); color: #3fb950; border: 1px solid rgba(63,185,80,0.25); padding: 10px 14px; border-radius: 6px; margin-bottom: 16px; font-size: 0.85rem; display: none; }
+
+    /* ── Admin ── */
+    .admin-header { background: linear-gradient(135deg, #1c2330 0%, #161b22 100%); border: 1px solid #30363d; color: #e6edf3; padding: 24px 28px; margin-bottom: 24px; border-radius: 10px; }
+    .admin-header h1 { margin: 0; font-size: 1.25rem; font-weight: 600; letter-spacing: -0.02em; }
+    .admin-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 24px; }
+    .admin-stat-card { background: #161b22; border: 1px solid #30363d; padding: 20px; border-radius: 10px; }
+    .admin-stat-card h3 { margin: 0 0 6px; color: #4f8ef7; font-size: 1.75rem; font-weight: 600; letter-spacing: -0.03em; font-family: 'DM Mono', monospace; }
+    .admin-stat-card p { margin: 0; color: #8b949e; font-size: 0.82rem; }
+    .users-table { background: #161b22; border: 1px solid #30363d; border-radius: 10px; overflow: hidden; }
+    .users-table table { width: 100%; border-collapse: collapse; }
+    .users-table th { background: #0d1117; padding: 12px 16px; text-align: left; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #8b949e; }
+    .users-table td { padding: 12px 16px; border-top: 1px solid #21262d; font-size: 0.875rem; color: #e6edf3; }
+    .users-table tr:hover td { background: #1c2330; }
+
+    /* ── Modal ── */
+    .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 500; align-items: center; justify-content: center; }
+    .modal.active { display: flex; }
+    .modal-content { background: #161b22; border: 1px solid #30363d; border-radius: 16px; padding: 32px; max-width: 520px; width: 90%; }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 1px solid #21262d; }
+    .modal-header h2 { font-size: 1.1rem; font-weight: 600; color: #e6edf3; }
+    .close-modal { background: none; border: none; font-size: 1.25rem; cursor: pointer; color: #8b949e; transition: color 0.15s; }
+    .close-modal:hover { color: #e6edf3; }
+    .user-details-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
+    .user-detail { padding: 12px 14px; background: #0d1117; border: 1px solid #21262d; border-radius: 6px; }
+    .user-detail label { display: block; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: #6e7681; margin-bottom: 4px; }
+    .user-detail strong { color: #e6edf3; font-size: 0.9rem; font-weight: 500; }
+
+    /* ── Diagnosis form inline overrides ── */
+    .form-section-heading {
+        font-size: 0.68rem;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #6e7681;
+        margin: 36px 0 18px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #21262d;
+    }
+    .form-section-heading:first-of-type { margin-top: 4px; }
+    .field-hint { font-size: 0.78rem; color: #6e7681; line-height: 1.4; }
+    .check-row {
+        display: flex; align-items: flex-start; gap: 10px;
+        padding: 14px 16px;
+        background: #1c2330; border: 1px solid #21262d; border-radius: 6px;
+        cursor: pointer; transition: border-color 0.15s; margin-bottom: 8px;
+    }
+    .check-row:hover { border-color: #30363d; }
+    .check-row input[type="checkbox"] { width:16px; height:16px; accent-color:#4f8ef7; flex-shrink:0; margin-top:2px; cursor:pointer; }
+    .check-row-body strong { display:block; font-size:0.875rem; font-weight:500; color:#e6edf3; margin-bottom:2px; }
+    .check-row-body span  { font-size:0.8rem; color:#8b949e; }
+    .bmi-panel { background:#1c2330; border:1px solid #21262d; border-radius:10px; padding:20px 22px; margin-top:4px; }
+    .bmi-panel-label { font-size:0.68rem; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:#6e7681; margin-bottom:14px; }
+    .bmi-inputs { display:flex; gap:16px; flex-wrap:wrap; }
+    .bmi-inputs .form-group { flex:1; min-width:110px; margin:0; }
+    .bmi-result { margin-top:12px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .bmi-badge { font-family:'DM Mono',monospace; font-size:0.82rem; font-weight:500; padding:3px 10px; border-radius:4px; border:1px solid currentColor; }
+    .bmi-label { font-size:0.8rem; color:#8b949e; }
+    .result-container { max-width:680px; margin:0 auto; }
+    .symptoms-checklist label { color: #c9d1d9; }
+    .history-container { max-width: 800px; margin: 0 auto; display: grid; gap: 12px; }
+</style>
+</head>
+<body>
+    <!-- Login Page -->
+    <div id="loginPage" class="auth-container" style="display: none;">
+        <div class="auth-box">
+            <div class="auth-header">
+                <i class="fas fa-heartbeat" style="font-size: 48px; color: #667eea;"></i>
+                <h1>Welcome to DualCare Health</h1>
+                <p>Login to access your health diagnosis dashboard</p>
+            </div>
+            
+            <div id="loginError" class="error-message"></div>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="loginUsername" required placeholder="Enter your username">
+                </div>
+                
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPassword" required placeholder="Enter your password">
+                </div>
+                
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </button>
+            </form>
+            
+            <div class="auth-toggle">
+                Don't have an account? <a href="#" onclick="showSignup()">Sign up</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Signup Page -->
+    <div id="signupPage" class="auth-container" style="display: none;">
+        <div class="auth-box">
+            <div class="auth-header">
+                <i class="fas fa-user-plus" style="font-size: 48px; color: #667eea;"></i>
+                <h1>Join DualCare Health</h1>
+                <p>Create your account to start your health monitoring journey</p>
+            </div>
+            
+            <div id="signupError" class="error-message"></div>
+            
+            <form id="signupForm">
+                <div class="form-group">
+                    <label>Full Name *</label>
+                    <input type="text" id="signupFullName" required placeholder="Enter your full name">
+                </div>
+                
+                <div class="form-group">
+                    <label>Username *</label>
+                    <input type="text" id="signupUsername" required placeholder="Choose a username">
+                </div>
+                
+                <div class="form-group">
+                    <label>Email *</label>
+                    <input type="email" id="signupEmail" required placeholder="Enter your email">
+                </div>
+                
+                <div class="form-group">
+                    <label>Password *</label>
+                    <input type="password" id="signupPassword" required placeholder="Create a password (min 6 characters)">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Age</label>
+                        <input type="number" id="signupAge" placeholder="Your age">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Gender</label>
+                        <select id="signupGender">
+                            <option value="">Select</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Phone</label>
+                    <input type="tel" id="signupPhone" placeholder="Your phone number">
+                </div>
+                
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    <i class="fas fa-user-plus"></i> Create Account
+                </button>
+            </form>
+            
+            <div class="auth-toggle">
+                Already have an account? <a href="#" onclick="showLogin()">Login</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application (shown after login) -->
+    <div id="mainApp" style="display: none;">
+        <!-- Navigation -->
+        <nav class="navbar">
+            <div class="container">
+                <div class="nav-brand">
+                    <i class="fas fa-heartbeat"></i>
+                    <span>DualCare Health</span>
+                </div>
+                <ul class="nav-menu">
+                    <li><a href="#home" class="nav-link active" onclick="showSection('home')">Home</a></li>
+                    <li><a href="#diagnose" class="nav-link" onclick="showSection('diagnose')">Diagnose</a></li>
+                    <li><a href="#history" class="nav-link" onclick="showSection('history')">My History</a></li>
+                    <li id="adminNavItem" style="display: none;"><a href="#admin" class="nav-link" onclick="showSection('admin')">Admin</a></li>
+                    <li><a href="#profile" class="nav-link" onclick="showSection('profile')">Profile</a></li>
+                    <li><a href="#" class="nav-link" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+                </ul>
+                <div class="user-info" id="userInfo" style="color: white; margin-left: 20px;"></div>
+            </div>
+        </nav>
+
+        <!-- Hero Section -->
+        <section id="home" class="hero">
+            <div class="container">
+                <div class="hero-content">
+                    <h1 class="hero-title">DualCare Health</h1>
+                    <p class="hero-subtitle" style="font-size:1.2rem;margin-top:10px;color:#7c8db5;">AI-Powered Malaria & Diabetes Diagnosis</p>
+                    <p class="hero-subtitle">Get instant predictions for Diabetes and Malaria using advanced machine learning</p>
+                    <div class="hero-stats">
+                        <div class="stat-card">
+                            <i class="fas fa-clipboard-check"></i>
+                            <h3 id="myDiagnosesCount">0</h3>
+                            <p>My Diagnoses</p>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fas fa-chart-line"></i>
+                            <h3>95%</h3>
+                            <p>Accuracy Rate</p>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fas fa-shield-alt"></i>
+                            <h3>Secure</h3>
+                            <p>Your Data</p>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-lg" onclick="showSection('diagnose')">
+                        Start Diagnosis <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Disease Selection Section -->
+        <section id="diagnose" class="section" style="display: none;">
+            <div class="container">
+                <h2 class="section-title">Select Disease to Diagnose</h2>
+                <p class="section-subtitle">Choose the condition you want to get predictions for</p>
+                
+                <div class="disease-cards">
+                    <div class="disease-card" onclick="selectDisease('diabetes')">
+                        <div class="disease-icon diabetes-icon">
+                            <i class="fas fa-syringe"></i>
+                        </div>
+                        <h3>Diabetes</h3>
+                        <p>Get predictions based on blood sugar levels, BMI, and symptoms</p>
+                        <ul class="disease-symptoms">
+                            <li><i class="fas fa-check"></i> Frequent urination</li>
+                            <li><i class="fas fa-check"></i> Excessive thirst</li>
+                            <li><i class="fas fa-check"></i> Unexplained weight loss</li>
+                            <li><i class="fas fa-check"></i> Blurred vision</li>
+                        </ul>
+                        <button class="btn btn-secondary">Select Diabetes</button>
+                    </div>
+
+                    <div class="disease-card" onclick="selectDisease('malaria')">
+                        <div class="disease-icon malaria-icon">
+                            <i class="fas fa-virus"></i>
+                        </div>
+                        <h3>Malaria</h3>
+                        <p>Get predictions based on fever patterns and related symptoms</p>
+                        <ul class="disease-symptoms">
+                            <li><i class="fas fa-check"></i> High fever with chills</li>
+                            <li><i class="fas fa-check"></i> Severe headache</li>
+                            <li><i class="fas fa-check"></i> Muscle pain</li>
+                            <li><i class="fas fa-check"></i> Recent travel history</li>
+                        </ul>
+                        <button class="btn btn-secondary">Select Malaria</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Diagnosis Form (same as original, just hidden initially) -->
+        <section id="diagnosisForm" class="section" style="display: none;">
+            <div class="container">
+                <div class="form-container">
+                    <button class="btn btn-secondary" onclick="showSection('diagnose')" style="margin-bottom: 20px;">
+                        <i class="fas fa-arrow-left"></i> Back to Selection
+                    </button>
+                    
+                    <h2 class="section-title" id="diseaseTitle">Disease Diagnosis</h2>
+                    
+                    <!-- Diabetes Form -->
+                    <form id="diabetesForm" style="display:none;">
+
+                        <p class="field-hint" style="margin-bottom:24px;">
+                            Answer what you know. Only your age is required — everything else is optional and will be estimated if left blank.
+                        </p>
+
+                        <p class="form-section-heading">About You</p>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Age <span style="color:#f85149;">*</span></label>
+                                <input type="number" name="Age" min="18" max="100" placeholder="e.g. 45" required>
+                            </div>
+                            <div class="form-group" style="justify-content:flex-end;">
+                                <label style="margin-bottom:10px;">Does diabetes run in your family?</label>
+                                <label class="check-row" style="margin:0;">
+                                    <input type="checkbox" name="Family History">
+                                    <span class="check-row-body">
+                                        <strong>Yes — a parent, sibling, or close relative has diabetes</strong>
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <p class="form-section-heading">Body Size — BMI Calculator <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#6e7681;font-size:0.78rem;"> optional</span></p>
+                        <div class="bmi-panel">
+                            <p class="bmi-panel-label">Enter weight &amp; height to calculate BMI</p>
+                            <div class="bmi-inputs">
+                                <div class="form-group">
+                                    <label>Weight (kg)</label>
+                                    <input type="number" id="bmiWeight" min="30" max="250" placeholder="e.g. 80" oninput="calcBMI()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Height (cm)</label>
+                                    <input type="number" id="bmiHeight" min="100" max="230" placeholder="e.g. 170" oninput="calcBMI()">
+                                </div>
+                            </div>
+                            <div class="bmi-result" id="bmiResultRow" style="display:none;">
+                                <span class="bmi-badge" id="bmiDisplay"></span>
+                                <span class="bmi-label" id="bmiCategory"></span>
+                            </div>
+                            <input type="hidden" name="BMI" id="bmiHiddenValue">
+                        </div>
+
+                        <p class="form-section-heading">Blood Sugar <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#6e7681;font-size:0.78rem;"> from a blood test taken after not eating for 8+ hours · optional</span></p>
+                        <p class="field-hint" style="margin:-10px 0 16px;">If you don't have these numbers, leave them blank.</p>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Blood Sugar — Reading 1 (mg/dL)</label>
+                                <input type="number" name="FFPG" min="70" max="300" placeholder="e.g. 125">
+                                <span class="field-hint">Below 100 is healthy &nbsp;·&nbsp; 100–125 is borderline &nbsp;·&nbsp; 126+ is high</span>
+                            </div>
+                            <div class="form-group">
+                                <label>Blood Sugar — Reading 2 (mg/dL)</label>
+                                <input type="number" name="FPG" min="70" max="300" placeholder="e.g. 110">
+                                <span class="field-hint">If you only have one reading, put it in Reading 1</span>
+                            </div>
+                        </div>
+
+                        <p class="form-section-heading">Cholesterol <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#6e7681;font-size:0.78rem;"> from a blood test · optional</span></p>
+                        <p class="field-hint" style="margin:-10px 0 16px;">These numbers are printed on your lab result sheet. Leave blank if you don't have them.</p>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>"Good" Cholesterol — HDL (mg/dL)</label>
+                                <input type="number" name="HDL" min="20" max="100" placeholder="e.g. 50">
+                                <span class="field-hint">Higher is better. Healthy: above 40 for men, above 50 for women</span>
+                            </div>
+                            <div class="form-group">
+                                <label>"Bad" Cholesterol — LDL (mg/dL)</label>
+                                <input type="number" name="LDL" min="50" max="200" placeholder="e.g. 120">
+                                <span class="field-hint">Lower is better. Aim for below 100</span>
+                            </div>
+                        </div>
+
+                        <p class="form-section-heading">Blood Pressure <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#6e7681;font-size:0.78rem;"> optional</span></p>
+                        <p class="field-hint" style="margin:-10px 0 16px;">A blood pressure reading looks like "130/85". We only need the first (larger) number.</p>
+                        <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
+                            <div class="form-group">
+                                <label>First blood pressure number (mmHg)</label>
+                                <input type="number" name="SBP" min="90" max="200" placeholder="e.g. 120">
+                                <span class="field-hint">Below 120 = healthy &nbsp;·&nbsp; 120–139 = elevated &nbsp;·&nbsp; 140+ = high</span>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-search"></i> Check My Diabetes Risk
+                        </button>
+                    </form>
+
+                    <!-- Malaria Form -->
+                    <form id="malariaForm" style="display:none;">
+
+                        <p class="field-hint" style="margin-bottom:24px;">
+                            Answer what you know. Age and temperature are required — the rest is optional.
+                        </p>
+
+                        <p class="form-section-heading">About You</p>
+                        <div class="form-grid" style="grid-template-columns:1fr 1fr;">
+                            <div class="form-group">
+                                <label>Age <span style="color:#f85149;">*</span></label>
+                                <input type="number" name="Age" min="1" max="100" placeholder="e.g. 35" required>
+                            </div>
+                        </div>
+
+                        <p class="form-section-heading">Fever</p>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Current body temperature (°C) <span style="color:#f85149;">*</span></label>
+                                <input type="number" step="0.1" name="Temperature" min="35" max="42" placeholder="e.g. 39.0" required>
+                                <span class="field-hint">Normal is 36.5–37.5 °C. Malaria typically causes fever above 38 °C</span>
+                            </div>
+                            <div class="form-group">
+                                <label>How many days have you had this fever?</label>
+                                <input type="number" name="Fever Duration" min="1" max="30" placeholder="e.g. 3">
+                                <span class="field-hint">Leave blank if you're not sure</span>
+                            </div>
+                        </div>
+
+                        <p class="form-section-heading">Symptoms — tick all that apply</p>
+                        <label class="check-row">
+                            <input type="checkbox" name="Chills">
+                            <span class="check-row-body">
+                                <strong>Shaking chills</strong>
+                                <span>You feel very cold and shiver uncontrollably, even when it's warm</span>
+                            </span>
+                        </label>
+                        <label class="check-row">
+                            <input type="checkbox" name="Sweating">
+                            <span class="check-row-body">
+                                <strong>Heavy sweating</strong>
+                                <span>You sweat heavily, especially after the chills pass</span>
+                            </span>
+                        </label>
+                        <label class="check-row">
+                            <input type="checkbox" name="Headache">
+                            <span class="check-row-body">
+                                <strong>Headache</strong>
+                                <span>A noticeable headache that came on with the fever</span>
+                            </span>
+                        </label>
+
+                        <p class="form-section-heading">Background</p>
+                        <label class="check-row">
+                            <input type="checkbox" name="Travel History">
+                            <span class="check-row-body">
+                                <strong>Recent travel</strong>
+                                <span>You have been to a rural area, bush, or malaria-prone region in the last 30 days</span>
+                            </span>
+                        </label>
+                        <label class="check-row">
+                            <input type="checkbox" name="Previous Malaria">
+                            <span class="check-row-body">
+                                <strong>Previous malaria</strong>
+                                <span>You have been diagnosed with malaria before</span>
+                            </span>
+                        </label>
+
+                        <p class="form-section-heading">Blood Test Results <span style="font-weight:400;text-transform:none;letter-spacing:0;color:#6e7681;font-size:0.78rem;"> optional — leave blank if you don't have them</span></p>
+                        <p class="field-hint" style="margin:-10px 0 16px;">If a clinic has already tested your blood, enter the numbers from your result sheet here. Leaving these blank is fine.</p>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Malaria parasite count</label>
+                                <input type="number" name="Parasite Density" min="0" max="50000" placeholder="e.g. 5000">
+                                <span class="field-hint">From a blood smear test. 0 means no parasites found.</span>
+                            </div>
+                            <div class="form-group">
+                                <label>Haemoglobin level (g/dL)</label>
+                                <input type="number" step="0.1" name="Hemoglobin" min="5" max="20" placeholder="e.g. 12.0">
+                                <span class="field-hint">Healthy: 12–16 (women) or 14–18 (men). Low levels can indicate anaemia.</span>
+                            </div>
+                            <div class="form-group">
+                                <label>White blood cell count (WBC)</label>
+                                <input type="number" step="0.1" name="WBC Count" min="1" max="25" placeholder="e.g. 8.5">
+                                <span class="field-hint">Normal range is roughly 4–11. Found on a Full Blood Count (FBC) sheet.</span>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-search"></i> Check My Malaria Risk
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- Results Section -->
+        <section id="results" class="section" style="display: none;">
+            <div class="container">
+                <div class="result-container">
+                    <button class="btn btn-secondary" onclick="showSection('diagnose')" style="margin-bottom: 20px;">
+                        <i class="fas fa-arrow-left"></i> New Diagnosis
+                    </button>
+                    
+                    <div id="resultContent"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- History Section -->
+        <section id="history" class="section" style="display: none;">
+            <div class="container">
+                <h2 class="section-title">My Diagnosis History</h2>
+                <p class="section-subtitle">View your previous health diagnoses</p>
+                
+                <div id="historyContainer" class="history-container">
+                    <p style="text-align: center; color: #999;">Loading your diagnosis history...</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Profile Section -->
+        <section id="profile" class="section" style="display: none;">
+            <div class="container">
+                <h2 class="section-title">My Profile</h2>
+                
+                <div class="form-container">
+                    <div id="profileError" class="error-message"></div>
+                    <div id="profileSuccess" class="success-message"></div>
+                    
+                    <form id="profileForm">
+                        <div class="form-group">
+                            <label>Full Name</label>
+                            <input type="text" id="profileFullName" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" id="profileEmail" required>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Age</label>
+                                <input type="number" id="profileAge">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Gender</label>
+                                <select id="profileGender">
+                                    <option value="">Select</option>
+                                    <option value="male">Male</option>
+                                    <option value="female">Female</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Phone</label>
+                            <input type="tel" id="profilePhone">
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Update Profile
+                        </button>
+                    </form>
+                    
+                    <hr style="margin: 30px 0;">
+                    
+                    <h3>Change Password</h3>
+                    <form id="passwordForm">
+                        <div class="form-group">
+                            <label>Current Password</label>
+                            <input type="password" id="oldPassword" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>New Password</label>
+                            <input type="password" id="newPassword" required>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-secondary">
+                            <i class="fas fa-key"></i> Change Password
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <!-- Admin Section -->
+        <section id="admin" class="section" style="display: none;">
+            <div class="container">
+                <div class="admin-header">
+                    <h1><i class="fas fa-user-shield"></i> Admin Dashboard</h1>
+                    <p>Manage users and monitor system activity</p>
+                </div>
+                
+                <div class="admin-stats" id="adminStats">
+                    <!-- Stats will be populated dynamically -->
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <button class="btn btn-primary" onclick="showCreateUserModal()">
+                        <i class="fas fa-user-plus"></i> Create New User
+                    </button>
+                </div>
+                
+                <div class="users-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Username</th>
+                                <th>Full Name</th>
+                                <th>Email</th>
+                                <th>Status</th>
+                                <th>Diagnoses</th>
+                                <th>Joined</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                            <!-- Users will be populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- User Details Modal -->
+    <div id="userModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>User Details</h2>
+                <button class="close-modal" onclick="closeUserModal()">&times;</button>
+            </div>
+            <div id="userModalContent">
+                <!-- Content will be populated dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div id="editUserModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Edit User</h2>
+                <button class="close-modal" onclick="closeEditUserModal()">&times;</button>
+            </div>
+            <form id="editUserForm">
+                <input type="hidden" id="editUserId">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="editUsername" required>
+                </div>
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="editFullName" required>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="editEmail" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Age</label>
+                        <input type="number" id="editAge">
+                    </div>
+                    <div class="form-group">
+                        <label>Gender</label>
+                        <select id="editGender">
+                            <option value="">Select</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Phone</label>
+                    <input type="tel" id="editPhone">
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="editIsActive"> Account Active
+                    </label>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    <i class="fas fa-save"></i> Save Changes
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Create User Modal -->
+    <div id="createUserModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Create New User</h2>
+                <button class="close-modal" onclick="closeCreateUserModal()">&times;</button>
+            </div>
+            <div id="createUserError" class="error-message"></div>
+            <form id="createUserForm">
+                <div class="form-group">
+                    <label>Username *</label>
+                    <input type="text" id="createUsername" required>
+                </div>
+                <div class="form-group">
+                    <label>Password *</label>
+                    <input type="password" id="createPassword" required>
+                </div>
+                <div class="form-group">
+                    <label>Full Name *</label>
+                    <input type="text" id="createFullName" required>
+                </div>
+                <div class="form-group">
+                    <label>Email *</label>
+                    <input type="email" id="createEmail" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Age</label>
+                        <input type="number" id="createAge">
+                    </div>
+                    <div class="form-group">
+                        <label>Gender</label>
+                        <select id="createGender">
+                            <option value="">Select</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Phone</label>
+                    <input type="tel" id="createPhone">
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="createIsAdmin"> Make Admin
+                    </label>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">
+                    <i class="fas fa-user-plus"></i> Create User
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script src="scriptp.js"></script>
+</body>
+</html>
