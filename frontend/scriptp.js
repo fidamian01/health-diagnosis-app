@@ -1,5 +1,5 @@
 // ── CONFIG ────────────────────────────────────────────────────────────────────
-const API_BASE = 'https://health-diagnosis-backend.onrender.com';
+const API_BASE = 'https://health-diagnosis-backend-b8dl.onrender.com';
 
 // ── TOKEN HELPERS ─────────────────────────────────────────────────────────────
 // Store token in localStorage so it persists and is sent on every request.
